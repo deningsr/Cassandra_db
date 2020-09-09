@@ -1,6 +1,6 @@
 ### Udacity Data Engineering NanoDegree Project 1: Relational Databases
 
-### Link to project rubric can be found here: https://review.udacity.com/#!/rubrics/2500/view
+### Link to project rubric can be found here: https://review.udacity.com/#!/rubrics/2475/view
 
 ### This project creates a Cassandra database for an imaginary startup named Sparkify. They have requested a simple date warehouse be created to organize the song data they produc.
 
