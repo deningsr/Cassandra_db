@@ -1,12 +1,3 @@
-
-# Part I. ETL Pipeline for Pre-Processing the Files
-
-## PLEASE RUN THE FOLLOWING CODE FOR PRE-PROCESSING THE FILES
-
-#### Import Python packages 
-
-
-```python
 import pandas as pd
 import cassandra
 import re
@@ -15,12 +6,8 @@ import glob
 import numpy as np
 import json
 import csv
-```
 
-#### Creating list of filepaths to process original event csv data files
-
-
-```python
+# Creating list of filepaths to process original event csv data files
 print(os.getcwd())
 
 # Get your current folder and subfolder event data
@@ -32,15 +19,9 @@ for root, dirs, files in os.walk(filepath):
 # join the file path and roots with the subdirectories using glob
     file_path_list = glob.glob(os.path.join(root,'*'))
     #print(file_path_list)
-```
-
-    /home/workspace
 
 
-#### Processing the files to create the data file csv that will be used for Apache Casssandra tables
-
-
-```python
+# Processing the files to create the data file csv that will be used for Apache Casssandra tables
 full_data_rows_list = [] 
     
 for f in file_path_list:
@@ -56,7 +37,8 @@ for f in file_path_list:
             
 print(len(full_data_rows_list))
 
-# creating a smaller event data csv file called event_datafile_full csv that will be used to insert data into the \
+
+# creating a smaller event data csv file called event_datafile_full csv that will be used to insert data into the 
 # Apache Cassandra tables
 csv.register_dialect('myDialect', quoting=csv.QUOTE_ALL, skipinitialspace=True)
 
@@ -68,56 +50,17 @@ with open('event_datafile_new.csv', 'w', encoding = 'utf8', newline='') as f:
         if (row[0] == ''):
             continue
         writer.writerow((row[0], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[12], row[13], row[16]))
-```
 
-    8056
-
-
-
-```python
 # check the number of rows in your csv file
 with open('event_datafile_new.csv', 'r', encoding = 'utf8') as f:
     print(sum(1 for line in f))
-```
 
-    6821
-
-
-# Part II. Complete the Apache Cassandra coding portion of your project. 
-
-## Now you are ready to work with the CSV file titled <font color=red>event_datafile_new.csv</font>, located within the Workspace directory.  The event_datafile_new.csv contains the following columns: 
-- artist 
-- firstName of user
-- gender of user
-- item number in session
-- last name of user
-- length of the song
-- level (paid or free song)
-- location of the user
-- sessionId
-- song title
-- userId
-
-The image below is a screenshot of what the denormalized data should appear like in the <font color=red>**event_datafile_new.csv**</font> after the code above is run:<br>
-
-<img src="images/image_event_datafile_new.jpg">
-
-## Begin writing your Apache Cassandra code in the cells below
-
-#### Creating a Cluster
-
-
-```python
+# Creating a Cluster
 from cassandra.cluster import Cluster
 cluster = Cluster()
-
 session = cluster.connect()
-```
 
-#### Create Keyspace
-
-
-```python
+# Create Keyspace
 try:
     session.execute("""
     CREATE KEYSPACE IF NOT EXISTS udacity 
@@ -127,36 +70,16 @@ try:
 
 except Exception as e:
     print(e)
-```
 
-#### Set Keyspace
-
-
-```python
+# Set Keyspace
 try:
     session.set_keyspace('udacity')
 except Exception as e:
     print(e)
-```
-
-### Now we need to create tables to run the following queries. Remember, with Apache Cassandra you model the database tables on the queries you want to run.
-
-## Create queries to ask the following three questions of the data
-
-### 1. Give me the artist, song title and song's length in the music app history that was heard during  sessionId = 338, and itemInSession  = 4
 
 
-### 2. Give me only the following: name of artist, song (sorted by itemInSession) and user (first and last name) for userid = 10, sessionid = 182
-    
-
-### 3. Give me every user name (first and last) in my music app history who listened to the song 'All Hands Against His Own'
-
-
-
-#### Query 1: This query selects the artist, song, and length based on the sessionid and iteminsession. The sessionid and iteminsession are used to make up the primary key.
-
-
-```python
+# Query 1: This query selects the artist, song, and length based on the sessionid and iteminsession. 
+# The sessionid and iteminsession are used to make up the primary key.
 session_table_drop = "DROP TABLE IF EXISTS session_library"
 
 try:
@@ -171,10 +94,7 @@ try:
     session.execute(query1)
 except Exception as e:
     print(e)
-```
 
-
-```python
 file = 'event_datafile_new.csv'
 
 with open(file, encoding = 'utf8') as f:
@@ -184,10 +104,7 @@ with open(file, encoding = 'utf8') as f:
         query = "INSERT INTO session_library (sessionid, iteminsession, artist_name, song_title, song_length)"
         query = query + "VALUES (%s, %s, %s, %s, %s)"
         session.execute(query, (int(line[8]), int(line[3]), line[0], line[9], float(line[5])))
-```
 
-
-```python
 select_query1 = "SELECT * FROM session_library WHERE sessionid = 338 AND iteminsession = 4"
 try:
     rows = session.execute(select_query1)
@@ -196,15 +113,10 @@ except Exception as e:
     
 for row in rows:
     print(row.artist_name, row.song_title, row.song_length)
-```
-
-    Faithless Music Matters (Mark Knight Dub) 495.30731201171875
 
 
-#### Query 2: This query selects the artist, song, and user based on the userid and sessionid. Song is also sorted by iteminsession. The primary key is made unique by partitioning on the userid and sessionid, and clustered by iteminsession.
-
-
-```python
+# Query 2: This query selects the artist, song, and user based on the userid and sessionid. Song is also sorted by iteminsession.
+# The primary key is made unique by partitioning on the userid and sessionid, and clustered by iteminsession.
 user_table_drop = "DROP TABLE IF EXISTS user_library"
 
 try:
@@ -219,10 +131,7 @@ try:
     session.execute(query2)
 except Exception as e:
     print(e)        
-```
 
-
-```python
 with open(file, encoding = 'utf8') as f:
     csvreader = csv.reader(f)
     next(csvreader) # skip header
@@ -230,10 +139,7 @@ with open(file, encoding = 'utf8') as f:
         query = "INSERT INTO user_library (userid, sessionid, iteminsession, artist_name, firstName, lastName, song_title, song_length)"
         query = query + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         session.execute(query, (int(line[-1]), int(line[8]), int(line[3]), line[0], line[1], line[4], line[9], float(line[5])))
-```
 
-
-```python
 select_query2 = "SELECT * FROM user_library WHERE userid = 10 AND sessionid = 182"
 
 try:
@@ -243,18 +149,10 @@ except Exception as e:
     
 for row in rows:
     print(row.artist_name, row.song_title, row.firstname, row.lastname)
-```
-
-    Down To The Bone Keep On Keepin' On Sylvie Cruz
-    Three Drives Greece 2000 Sylvie Cruz
-    Sebastien Tellier Kilometer Sylvie Cruz
-    Lonnie Gordon Catch You Baby (Steve Pitron & Max Sanna Radio Edit) Sylvie Cruz
 
 
-#### Query 3: This query selects the first and last names of all users that listened to a particular song. The primary key is made unique by partitioning on the userid and sessionid, and clustering on iteminsession.
-
-
-```python
+# Query 3: This query selects the first and last names of all users that listened to a particular song. 
+# The primary key is made unique by partitioning on the userid and sessionid, and clustering on iteminsession.
 song_table_drop = "DROP TABLE IF EXISTS song_library"
 
 try:
@@ -269,10 +167,8 @@ try:
     session.execute(query3)
 except Exception as e:
     print(e)        
-```
 
 
-```python
 with open(file, encoding = 'utf8') as f:
     csvreader = csv.reader(f)
     next(csvreader)
@@ -280,10 +176,8 @@ with open(file, encoding = 'utf8') as f:
         query = "INSERT INTO song_library (song_title, userId, firstName, lastName)"
         query = query + "VALUES (%s, %s, %s, %s)"
         session.execute(query, (line[9], int(line[10]), line[1], line[4]))
-```
 
 
-```python
 select_query3 = "SELECT firstName, lastName FROM song_library WHERE song_title='All Hands Against His Own'"
 
 try:
@@ -293,17 +187,9 @@ except Exception as e:
     
 for row in rows:
     print(row.firstname, row.lastname)
-```
-
-    Jacqueline Lynch
-    Tegan Levine
-    Sara Johnson
 
 
-### Drop the tables before closing out the sessions
-
-
-```python
+# Drop the tables before closing out the sessions
 try:
     rows = session.execute("DROP TABLE session_library")
 except Exception as e:
@@ -318,12 +204,7 @@ try:
     rows = session.execute("DROP TABLE song_library")
 except Exception as e:
     print(e)
-```
 
-### Close the session and cluster connection¶
-
-
-```python
+# Close the session and cluster connection¶
 session.shutdown()
 cluster.shutdown()
-```
