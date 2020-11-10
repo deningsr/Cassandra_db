@@ -6,6 +6,7 @@ import glob
 import numpy as np
 import json
 import csv
+from cassandra.cluster import Cluster
 
 # Creating list of filepaths to process original event csv data files
 print(os.getcwd())
@@ -37,7 +38,6 @@ for f in file_path_list:
             
 print(len(full_data_rows_list))
 
-
 # creating a smaller event data csv file called event_datafile_full csv that will be used to insert data into the 
 # Apache Cassandra tables
 csv.register_dialect('myDialect', quoting=csv.QUOTE_ALL, skipinitialspace=True)
@@ -56,7 +56,6 @@ with open('event_datafile_new.csv', 'r', encoding = 'utf8') as f:
     print(sum(1 for line in f))
 
 # Creating a Cluster
-from cassandra.cluster import Cluster
 cluster = Cluster()
 session = cluster.connect()
 
@@ -76,7 +75,6 @@ try:
     session.set_keyspace('udacity')
 except Exception as e:
     print(e)
-
 
 # Query 1: This query selects the artist, song, and length based on the sessionid and iteminsession. 
 # The sessionid and iteminsession are used to make up the primary key.
@@ -114,7 +112,6 @@ except Exception as e:
 for row in rows:
     print(row.artist_name, row.song_title, row.song_length)
 
-
 # Query 2: This query selects the artist, song, and user based on the userid and sessionid. Song is also sorted by iteminsession.
 # The primary key is made unique by partitioning on the userid and sessionid, and clustered by iteminsession.
 user_table_drop = "DROP TABLE IF EXISTS user_library"
@@ -149,7 +146,6 @@ except Exception as e:
     
 for row in rows:
     print(row.artist_name, row.song_title, row.firstname, row.lastname)
-
 
 # Query 3: This query selects the first and last names of all users that listened to a particular song. 
 # The primary key is made unique by partitioning on the userid and sessionid, and clustering on iteminsession.
@@ -187,7 +183,6 @@ except Exception as e:
     
 for row in rows:
     print(row.firstname, row.lastname)
-
 
 # Drop the tables before closing out the sessions
 try:
